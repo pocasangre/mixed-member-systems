@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mixed-member electoral systems</title>
+  <style>
+    /* ── Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --color-background-primary: #ffffff;
+      --color-background-secondary: #f5f4f0;
+      --color-background-tertiary: #eeedea;
+      --color-background-info: #e6f1fb;
+      --color-background-success: #eaf3de;
+      --color-background-warning: #faeeda;
+      --color-background-danger: #fcebeb;
+
+      --color-text-primary: #1a1a18;
+      --color-text-secondary: #5f5e5a;
+      --color-text-tertiary: #888780;
+      --color-text-info: #0c447c;
+      --color-text-success: #27500a;
+      --color-text-warning: #633806;
+      --color-text-danger: #791f1f;
+
+      --color-border-tertiary: rgba(0,0,0,0.12);
+      --color-border-secondary: rgba(0,0,0,0.22);
+      --color-border-primary: rgba(0,0,0,0.32);
+      --color-border-info: rgba(24,95,165,0.4);
+      --color-border-success: rgba(59,109,17,0.4);
+      --color-border-warning: rgba(99,56,6,0.4);
+      --color-border-danger: rgba(121,31,31,0.4);
+
+      --border-radius-md: 8px;
+      --border-radius-lg: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-background-primary: #1c1c1a;
+        --color-background-secondary: #252523;
+        --color-background-tertiary: #2e2e2b;
+        --color-background-info: #042c53;
+        --color-background-success: #173404;
+        --color-background-warning: #412402;
+        --color-background-danger: #501313;
+
+        --color-text-primary: #e8e6df;
+        --color-text-secondary: #a8a69e;
+        --color-text-tertiary: #737168;
+        --color-text-info: #85b7eb;
+        --color-text-success: #97c459;
+        --color-text-warning: #ef9f27;
+        --color-text-danger: #f09595;
+
+        --color-border-tertiary: rgba(255,255,255,0.1);
+        --color-border-secondary: rgba(255,255,255,0.18);
+        --color-border-primary: rgba(255,255,255,0.28);
+        --color-border-info: rgba(133,183,235,0.35);
+        --color-border-success: rgba(151,196,89,0.35);
+        --color-border-warning: rgba(239,159,39,0.35);
+        --color-border-danger: rgba(240,149,149,0.35);
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--color-text-primary);
+      background: var(--color-background-tertiary);
+      padding: 2rem 1rem;
+    }
+
+    .page-wrapper {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--color-text-primary);
+      margin-bottom: 0.4rem;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      margin-bottom: 2rem;
+    }
+
+    .widget-card {
+      background: var(--color-background-primary);
+      border-radius: var(--border-radius-lg);
+      border: 0.5px solid var(--color-border-tertiary);
+      padding: 1.5rem;
+    }
+
+    /* ── form elements ── */
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--color-border-secondary);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--color-text-primary);
+      cursor: pointer;
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--color-text-primary);
+      cursor: pointer;
+      border: none;
+    }
+
+    /* ── widget internals ── */
+    * { box-sizing: border-box; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .tab { padding: 6px 14px; border-radius: 20px; border: 0.5px solid var(--color-border-secondary); background: transparent; font-size: 13px; cursor: pointer; color: var(--color-text-secondary); transition: all .15s; font-family: inherit; }
+    .tab.active { background: var(--color-background-info); color: var(--color-text-info); border-color: transparent; font-weight: 500; }
+    .tab:hover:not(.active) { background: var(--color-background-secondary); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .label { font-size: 12px; color: var(--color-text-secondary); }
+    .bold-label { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+    .muted { color: var(--color-text-secondary); font-size: 13px; }
+    .pill { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+    .pill-blue { background: var(--color-background-info); color: var(--color-text-info); }
+    .pill-green { background: var(--color-background-success); color: var(--color-text-success); }
+    .pill-amber { background: var(--color-background-warning); color: var(--color-text-warning); }
+    .card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 14px 16px; margin-bottom: 10px; }
+    .row { display: flex; gap: 10px; margin-bottom: 10px; }
+    .row .card { flex: 1; margin: 0; }
+    .seat-grid { display: flex; flex-wrap: wrap; gap: 3px; margin: 8px 0; }
+    .seat { width: 13px; height: 13px; border-radius: 2px; transition: background .2s; }
+    .metric-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 14px; text-align: center; }
+    .metric-val { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+    .metric-lbl { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+    .stepper-btn { width: 28px; height: 28px; border-radius: 6px; border: 0.5px solid var(--color-border-secondary); background: transparent; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--color-text-primary); transition: background .12s; line-height: 1; font-family: inherit; }
+    .stepper-btn:hover { background: var(--color-background-secondary); }
+    .system-toggle { display: flex; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); overflow: hidden; margin-bottom: 14px; }
+    .system-btn { flex: 1; padding: 8px 12px; border: none; background: transparent; font-size: 13px; cursor: pointer; color: var(--color-text-secondary); transition: all .15s; font-family: inherit; }
+    .system-btn.active-mmp { background: var(--color-background-info); color: var(--color-text-info); font-weight: 500; }
+    .system-btn.active-mmm { background: var(--color-background-success); color: var(--color-text-success); font-weight: 500; }
+
+    footer {
+      margin-top: 2rem;
+      font-size: 12px;
+      color: var(--color-text-tertiary);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <h1>Mixed-member electoral systems</h1>
+  <p class="subtitle">An interactive explainer of how mixed-member proportional (MMP) and mixed-member majoritarian (MMM) systems work.</p>
+
+  <div class="widget-card">
+
+    <p class="muted" style="margin: 0 0 1.2rem;">Mixed-member systems combine a district (majoritarian) tier with a party-list (proportional) tier. Explore the four key design dimensions below.</p>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('linkage')">Tier linkage</button>
+      <button class="tab" onclick="showTab('ballot')">Ballot structure</button>
+      <button class="tab" onclick="showTab('size')">Seat proportions</button>
+      <button class="tab" onclick="showTab('threshold')">Thresholds</button>
+    </div>
+
+    <!-- TAB 1: LINKAGE -->
+    <div class="panel active" id="tab-linkage">
+      <p class="muted" style="margin: 0 0 14px;">The key distinction is whether party-list seats <em>compensate</em> for district outcomes (MMP) or are allocated independently (MMM).</p>
+
+      <div class="row">
+        <div class="card" style="border-left: 3px solid #185FA5; border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;">
+          <div class="bold-label" style="margin-bottom:6px;">MMP <span class="pill pill-blue" style="font-size:11px;margin-left:4px;">linked</span></div>
+          <div class="muted" style="font-size:12px;">List seats correct distortions from district wins. Parliament may expand with <strong style="color:var(--color-text-primary)">overhang seats</strong>.</div>
+          <div style="margin-top:8px;font-size:12px;" class="label">New Zealand, Germany, Scotland</div>
+        </div>
+        <div class="card" style="border-left: 3px solid #639922; border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;">
+          <div class="bold-label" style="margin-bottom:6px;">MMM <span class="pill pill-green" style="font-size:11px;margin-left:4px;">parallel</span></div>
+          <div class="muted" style="font-size:12px;">Tiers allocated independently. Legislature size stays fixed; dominant parties benefit. Less proportional.</div>
+          <div style="margin-top:8px;font-size:12px;" class="label">Japan, South Korea, Mexico</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+          <div class="bold-label">Simulate seat allocation</div>
+          <div class="system-toggle" style="width:200px;">
+            <button class="system-btn active-mmp" id="btn-mmp" onclick="setSystem('mmp')">MMP</button>
+            <button class="system-btn" id="btn-mmm" onclick="setSystem('mmm')">MMM</button>
+          </div>
+        </div>
+
+        <div id="system-explainer" style="font-size:12px; padding:7px 11px; border-radius:var(--border-radius-md); margin-bottom:12px; border:0.5px solid var(--color-border-tertiary);"></div>
+
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+            <span class="label">Party vote share — entitles party to <span id="entitled-seats-inline" style="font-weight:500;color:var(--color-text-primary);">60</span> of 120 seats</span>
+            <span style="font-size:13px;font-weight:500;color:var(--color-text-primary);" id="vote-share-display">50%</span>
+          </div>
+          <input type="range" min="5" max="70" step="1" value="50" id="vote-slider" oninput="updateLinkage()" style="width:100%;">
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div class="label" style="margin-bottom:8px;">District seats won by this party</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="stepper-btn" onclick="changeDistrict(-1)">&#8722;</button>
+            <span style="font-size:20px;font-weight:500;color:var(--color-text-primary);min-width:32px;text-align:center;" id="district-val">30</span>
+            <button class="stepper-btn" onclick="changeDistrict(1)">&#43;</button>
+            <span class="muted" style="font-size:12px;">of 60 district seats total</span>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px;">
+          <div class="metric-card"><div class="metric-val" id="m-district">30</div><div class="metric-lbl">District seats</div></div>
+          <div class="metric-card"><div class="metric-val" id="m-list">30</div><div class="metric-lbl">List seats</div></div>
+          <div class="metric-card"><div class="metric-val" id="m-total">60</div><div class="metric-lbl">Party total</div></div>
+          <div class="metric-card"><div class="metric-val" id="m-legislature">120</div><div class="metric-lbl">Legislature size</div></div>
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span class="label">Legislature — <span id="legislature-size-label" style="font-weight:500;color:var(--color-text-primary);">120</span> seats total</span>
+            <span class="label" id="share-label">Party A: 50%</span>
+          </div>
+          <div class="seat-grid" id="seat-grid"></div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+            <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--color-text-secondary);"><span style="width:10px;height:10px;border-radius:2px;background:#185FA5;display:inline-block;"></span>Party A — district</span>
+            <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--color-text-secondary);"><span style="width:10px;height:10px;border-radius:2px;background:#85B7EB;display:inline-block;"></span>Party A — list</span>
+            <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--color-text-secondary);"><span style="width:10px;height:10px;border-radius:2px;background:#639922;display:inline-block;"></span>Others — district</span>
+            <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--color-text-secondary);"><span style="width:10px;height:10px;border-radius:2px;background:#97C459;display:inline-block;"></span>Others — list</span>
+            <span id="legend-overhang" style="display:none;align-items:center;gap:4px;font-size:11px;color:var(--color-text-secondary);"><span style="width:10px;height:10px;border-radius:2px;background:#EF9F27;display:inline-block;"></span>Overhang</span>
+          </div>
+        </div>
+
+        <div id="system-note" style="font-size:12px;padding:8px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary);min-height:36px;"></div>
+      </div>
+
+      <div class="card" style="background:transparent;border:0.5px solid var(--color-border-tertiary);">
+        <div class="bold-label" style="margin-bottom:6px;">Scotland's D'Hondt method (MMP variant)</div>
+        <div class="muted" style="font-size:12px;">List votes ÷ (district seats won + 1). The party with the highest quotient gets the next list seat. Size stays fixed — slightly less proportional than New Zealand.</div>
+      </div>
+    </div>
+
+    <!-- TAB 2: BALLOT -->
+    <div class="panel" id="tab-ballot">
+      <p class="muted" style="margin: 0 0 14px;">Systems differ in whether voters cast one vote or two — which shapes strategic voting behaviour.</p>
+      <div class="row">
+        <div class="card" style="border-left: 3px solid #BA7517; border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;">
+          <div class="bold-label" style="margin-bottom:6px;">Single vote <span class="pill pill-amber" style="font-size:11px;margin-left:4px;">fused</span></div>
+          <div class="muted" style="font-size:12px;">One vote counts for both district candidate and party. Simpler, but voters can't split preferences.</div>
+          <div style="margin-top:8px;font-size:12px;" class="label">Example: Mexico (regional pools)</div>
+        </div>
+        <div class="card" style="border-left: 3px solid #185FA5; border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;">
+          <div class="bold-label" style="margin-bottom:6px;">Two votes <span class="pill pill-blue" style="font-size:11px;margin-left:4px;">split</span></div>
+          <div class="muted" style="font-size:12px;">Separate votes for district candidate and party list. Enables <strong style="color:var(--color-text-primary)">split-ticket voting</strong> — backing a local candidate strategically while expressing true party preference.</div>
+          <div style="margin-top:8px;font-size:12px;" class="label">Examples: Germany, New Zealand, Japan</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="bold-label" style="margin-bottom:10px;">Simulated ballot — Germany style</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <div class="label" style="margin-bottom:6px;">Vote 1 — district candidate</div>
+            <div id="candidate-list"></div>
+          </div>
+          <div style="flex:1;min-width:200px;">
+            <div class="label" style="margin-bottom:6px;">Vote 2 — party list</div>
+            <div id="party-list"></div>
+          </div>
+        </div>
+        <div id="ballot-note" style="margin-top:12px;font-size:12px;color:var(--color-text-secondary);min-height:18px;"></div>
+      </div>
+      <div class="card" style="background:transparent;border:0.5px solid var(--color-border-tertiary);">
+        <div class="bold-label" style="margin-bottom:6px;">Hungary — excess vote transfer</div>
+        <div class="muted" style="font-size:12px;">Surplus votes for winning candidates flow to their party, disproportionately rewarding dominant parties. Technically MMM despite the linkage.</div>
+      </div>
+    </div>
+
+    <!-- TAB 3: SIZE -->
+    <div class="panel" id="tab-size">
+      <p class="muted" style="margin: 0 0 14px;">The split between district and list seats, and whether parliament can expand, determines how proportional outcomes are.</p>
+      <div class="card">
+        <div class="bold-label" style="margin-bottom:10px;">Drag: share of list seats</div>
+        <div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:8px;">List seats: <span id="list-share-val">50</span>% — <span id="proportionality-label" style="font-weight:500;"></span></div>
+        <input type="range" min="5" max="80" value="50" id="list-share-slider" oninput="updateSize(this.value)">
+        <div style="margin-top:14px;height:28px;background:var(--color-background-secondary);border-radius:6px;overflow:hidden;display:flex;border:0.5px solid var(--color-border-tertiary);">
+          <div id="district-bar" style="background:#185FA5;transition:width .3s;display:flex;align-items:center;justify-content:center;"><span style="font-size:11px;color:#B5D4F4;font-weight:500;">Districts</span></div>
+          <div id="list-bar" style="background:#639922;transition:width .3s;display:flex;align-items:center;justify-content:center;"><span style="font-size:11px;color:#C0DD97;font-weight:500;">List</span></div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:4px;">
+        <div class="card" style="border-top:3px solid #185FA5;">
+          <div class="bold-label" style="margin-bottom:6px;">New Zealand</div>
+          <div style="height:6px;border-radius:3px;margin-bottom:8px;background:linear-gradient(to right,#185FA5 60%,#639922 60%);"></div>
+          <div class="muted" style="font-size:12px;">72 district / 48 list. Parliament expands with overhang seats.</div>
+        </div>
+        <div class="card" style="border-top:3px solid #3B6D11;">
+          <div class="bold-label" style="margin-bottom:6px;">Germany (post-2023)</div>
+          <div style="height:6px;border-radius:3px;margin-bottom:8px;background:linear-gradient(to right,#185FA5 50%,#639922 50%);"></div>
+          <div class="muted" style="font-size:12px;">299 district / 299 list. Fixed at 598. Winners may lose district seats — <strong style="color:var(--color-text-primary)">orphaned constituencies</strong>.</div>
+        </div>
+        <div class="card" style="border-top:3px solid #BA7517;">
+          <div class="bold-label" style="margin-bottom:6px;">Japan (MMM)</div>
+          <div style="height:6px;border-radius:3px;margin-bottom:8px;background:linear-gradient(to right,#185FA5 62%,#639922 62%);"></div>
+          <div class="muted" style="font-size:12px;">289 district / 176 list. No compensation — dominant parties advantaged.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: THRESHOLDS -->
+    <div class="panel" id="tab-threshold">
+      <p class="muted" style="margin: 0 0 14px;">Most systems impose minimum vote share or district seat requirements before a party can receive list seats.</p>
+      <div class="card">
+        <div class="bold-label" style="margin-bottom:10px;">Simulate a party's vote share</div>
+        <div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:8px;">Party vote share: <span id="vote-share-val">4</span>%</div>
+        <input type="range" min="0" max="15" step="0.5" value="4" id="vote-slider-t" oninput="updateThreshold(this.value)">
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;" id="country-thresholds"></div>
+      </div>
+      <div class="card" style="background:transparent;border:0.5px solid var(--color-border-tertiary);margin-top:4px;">
+        <div class="bold-label" style="margin-bottom:8px;">Threshold types</div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--color-text-secondary);">
+          <div><span class="pill pill-blue" style="margin-right:6px;">Vote-share</span> Party needs X% of party-list vote nationally (Germany 5%, NZ 5%)</div>
+          <div><span class="pill pill-green" style="margin-right:6px;">District escape</span> Winning a district seat unlocks proportional seats even below the % threshold</div>
+          <div><span class="pill pill-amber" style="margin-right:6px;">Effect</span> Thresholds reduce fragmentation but exclude small parties; escape clauses protect regional strongholds</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.widget-card -->
+
+  <footer>Based on Carey &amp; Hix (2011) and Electoral Reform Society comparative data. Built as an interactive explainer.</footer>
+
+</div><!-- /.page-wrapper -->
+
+<script>
+  const TOTAL_DISTRICT = 60;
+  const BASE_LIST = 60;
+  let districtWon = 30;
+  let currentSystem = 'mmp';
+
+  function setSystem(sys) {
+    currentSystem = sys;
+    const btnMmp = document.getElementById('btn-mmp');
+    const btnMmm = document.getElementById('btn-mmm');
+    btnMmp.className = 'system-btn' + (sys === 'mmp' ? ' active-mmp' : '');
+    btnMmm.className = 'system-btn' + (sys === 'mmm' ? ' active-mmm' : '');
+    updateLinkage();
+  }
+
+  function updateLinkage() {
+    const voteShare = parseInt(document.getElementById('vote-slider').value);
+    const baseLegislature = TOTAL_DISTRICT + BASE_LIST;
+    const entitled = Math.round(voteShare / 100 * baseLegislature);
+
+    document.getElementById('vote-share-display').textContent = voteShare + '%';
+    document.getElementById('entitled-seats-inline').textContent = entitled;
+
+    districtWon = Math.min(districtWon, TOTAL_DISTRICT);
+    document.getElementById('district-val').textContent = districtWon;
+
+    const explainer = document.getElementById('system-explainer');
+    const note = document.getElementById('system-note');
+    const legendOverhang = document.getElementById('legend-overhang');
+
+    let listAwarded, partyTotal, legislatureSize;
+
+    if (currentSystem === 'mmp') {
+      explainer.style.background = 'var(--color-background-info)';
+      explainer.style.color = 'var(--color-text-info)';
+      explainer.style.borderColor = 'var(--color-border-info)';
+      explainer.textContent = 'MMP: list seats compensate for district results. Party A is entitled to ' + entitled + ' seats based on its vote share. List seats fill the gap.';
+
+      const listNeeded = Math.max(0, entitled - districtWon);
+      listAwarded = Math.min(listNeeded, BASE_LIST);
+      partyTotal = districtWon + listAwarded;
+      const isOverhang = districtWon > entitled;
+      legislatureSize = isOverhang ? baseLegislature + (districtWon - entitled) : baseLegislature;
+
+      legendOverhang.style.display = isOverhang ? 'flex' : 'none';
+
+      if (isOverhang) {
+        const extra = districtWon - entitled;
+        note.style.borderColor = 'var(--color-border-warning)';
+        note.style.background = 'var(--color-background-warning)';
+        note.style.color = 'var(--color-text-warning)';
+        note.textContent = 'Overhang: party won ' + districtWon + ' district seats but is entitled to only ' + entitled + ' by vote share. Parliament expands by ' + extra + ' seat' + (extra > 1 ? 's' : '') + ' to ' + legislatureSize + ' total (NZ-style). In Germany post-2023, the party may instead forfeit district seats.';
+      } else {
+        const gap = entitled - districtWon;
+        note.style.borderColor = 'var(--color-border-tertiary)';
+        note.style.background = 'transparent';
+        note.style.color = 'var(--color-text-secondary)';
+        if (gap === 0) {
+          note.textContent = 'Exact match: district wins equal the party\'s entitlement. No list seats needed to compensate.';
+        } else {
+          const sharePct = Math.round(partyTotal / legislatureSize * 100);
+          note.textContent = 'List tier compensates: ' + listAwarded + ' list seat' + (listAwarded !== 1 ? 's' : '') + ' top up ' + districtWon + ' district win' + (districtWon !== 1 ? 's' : '') + ', giving Party A ' + partyTotal + ' seats (' + sharePct + '% of parliament) — close to its ' + voteShare + '% vote share.';
+        }
+      }
+    } else {
+      explainer.style.background = 'var(--color-background-success)';
+      explainer.style.color = 'var(--color-text-success)';
+      explainer.style.borderColor = 'var(--color-border-success)';
+      explainer.textContent = 'MMM: list seats are allocated purely by vote share, independently of district results. No compensation — both tiers simply add together.';
+
+      listAwarded = Math.round(voteShare / 100 * BASE_LIST);
+      partyTotal = districtWon + listAwarded;
+      legislatureSize = baseLegislature;
+      legendOverhang.style.display = 'none';
+
+      note.style.borderColor = 'var(--color-border-tertiary)';
+      note.style.background = 'transparent';
+      note.style.color = 'var(--color-text-secondary)';
+      const sharePct = Math.round(partyTotal / legislatureSize * 100);
+      const distortionPct = sharePct - voteShare;
+      const distortion = Math.abs(distortionPct);
+      if (districtWon > entitled) {
+        note.textContent = 'No overhang in MMM: the party keeps all ' + districtWon + ' district seats plus ' + listAwarded + ' list seats, reaching ' + sharePct + '% of parliament on ' + voteShare + '% of the vote — a bonus of +' + distortion + 'pp. Legislature stays at ' + legislatureSize + '.';
+      } else if (distortion < 2) {
+        note.textContent = 'In this scenario MMM and MMP produce similar results (' + sharePct + '% seats vs ' + voteShare + '% vote share). The distortion grows when district wins diverge from vote share.';
+      } else {
+        note.textContent = 'Party A wins ' + sharePct + '% of seats on ' + voteShare + '% of the vote — a ' + (distortionPct > 0 ? 'bonus of +' : 'penalty of ') + distortion + 'pp. MMM does not correct for this. Legislature stays fixed at ' + legislatureSize + '.';
+      }
+    }
+
+    document.getElementById('m-district').textContent = districtWon;
+    document.getElementById('m-list').textContent = listAwarded;
+    document.getElementById('m-total').textContent = partyTotal;
+    document.getElementById('m-legislature').textContent = legislatureSize;
+    document.getElementById('legislature-size-label').textContent = legislatureSize;
+    const sharePct = Math.round(partyTotal / legislatureSize * 100);
+    document.getElementById('share-label').textContent = 'Party A: ' + sharePct + '%';
+
+    const grid = document.getElementById('seat-grid');
+    grid.innerHTML = '';
+    const otherDistrict = TOTAL_DISTRICT - districtWon;
+    const otherList = BASE_LIST - listAwarded;
+    const extraSeats = currentSystem === 'mmp' && districtWon > entitled ? districtWon - entitled : 0;
+
+    [
+      { count: districtWon, color: '#185FA5' },
+      { count: listAwarded, color: '#85B7EB' },
+      { count: otherDistrict, color: '#639922' },
+      { count: otherList, color: '#97C459' },
+      { count: extraSeats, color: '#EF9F27' },
+    ].forEach(s => {
+      for (let i = 0; i < s.count; i++) {
+        const el = document.createElement('div');
+        el.className = 'seat';
+        el.style.background = s.color;
+        grid.appendChild(el);
+      }
+    });
+  }
+
+  function changeDistrict(delta) {
+    districtWon = Math.max(0, Math.min(TOTAL_DISTRICT, districtWon + delta));
+    updateLinkage();
+  }
+
+  updateLinkage();
+
+  function showTab(id) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function updateSize(v) {
+    v = parseInt(v);
+    document.getElementById('list-share-val').textContent = v;
+    document.getElementById('district-bar').style.width = (100 - v) + '%';
+    document.getElementById('list-bar').style.width = v + '%';
+    const lbl = document.getElementById('proportionality-label');
+    if (v < 20) { lbl.textContent = 'very majoritarian'; lbl.style.color = 'var(--color-text-danger)'; }
+    else if (v < 35) { lbl.textContent = 'majoritarian leaning'; lbl.style.color = 'var(--color-text-warning)'; }
+    else if (v < 55) { lbl.textContent = 'near-proportional'; lbl.style.color = 'var(--color-text-success)'; }
+    else { lbl.textContent = 'highly proportional'; lbl.style.color = 'var(--color-text-success)'; }
+  }
+  updateSize(50);
+
+  const candidates = [
+    { name: 'Anna Köhler', party: 'Blue Party', color: '#185FA5' },
+    { name: 'Max Bauer', party: 'Green Party', color: '#3B6D11' },
+    { name: 'Sara Müller', party: 'Red Party', color: '#A32D2D' },
+  ];
+  const parties = [
+    { name: 'Blue Party', color: '#185FA5' },
+    { name: 'Green Party', color: '#3B6D11' },
+    { name: 'Red Party', color: '#A32D2D' },
+    { name: 'Yellow Party', color: '#BA7517' },
+  ];
+  let selCandidate = null, selParty = null;
+
+  function buildBallot() {
+    const cl = document.getElementById('candidate-list');
+    const pl = document.getElementById('party-list');
+    cl.innerHTML = ''; pl.innerHTML = '';
+    candidates.forEach((c, i) => {
+      const d = document.createElement('div');
+      d.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;border:0.5px solid var(--color-border-tertiary);margin-bottom:5px;cursor:pointer;transition:background .12s;font-size:13px;';
+      d.innerHTML = '<span style="width:12px;height:12px;border-radius:50%;background:' + c.color + ';flex-shrink:0;"></span><span>' + c.name + '</span><span style="font-size:11px;color:var(--color-text-secondary);margin-left:auto;">' + c.party + '</span>';
+      d.onclick = () => { selCandidate = i; buildBallot(); };
+      if (selCandidate === i) { d.style.background = 'var(--color-background-info)'; d.style.borderColor = '#185FA5'; }
+      cl.appendChild(d);
+    });
+    parties.forEach((p, i) => {
+      const d = document.createElement('div');
+      d.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;border:0.5px solid var(--color-border-tertiary);margin-bottom:5px;cursor:pointer;transition:background .12s;font-size:13px;';
+      d.innerHTML = '<span style="width:12px;height:12px;border-radius:3px;background:' + p.color + ';flex-shrink:0;"></span><span>' + p.name + '</span>';
+      d.onclick = () => { selParty = i; buildBallot(); };
+      if (selParty === i) { d.style.background = 'var(--color-background-info)'; d.style.borderColor = '#185FA5'; }
+      pl.appendChild(d);
+    });
+    const note = document.getElementById('ballot-note');
+    if (selCandidate !== null && selParty !== null) {
+      const samePty = candidates[selCandidate].party === parties[selParty].name;
+      note.textContent = samePty ? 'Straight ticket: both votes go to the same party. Common, but not required.' : 'Split ticket: backing ' + candidates[selCandidate].name + ' locally, but preferring the ' + parties[selParty].name + ' nationally. Only possible with two votes.';
+    } else if (selCandidate !== null || selParty !== null) {
+      note.textContent = 'Select both a candidate and a party to complete the ballot.';
+    }
+  }
+  buildBallot();
+
+  const thresholdCountries = [
+    { name: 'Germany', voteThreshold: 5, note: '3 district wins OR 5% party vote' },
+    { name: 'New Zealand', voteThreshold: 5, note: '1 district win OR 5% party vote' },
+    { name: 'Scotland', voteThreshold: 0, note: 'No formal threshold; D\'Hondt naturally excludes tiny parties' },
+  ];
+
+  function updateThreshold(v) {
+    v = parseFloat(v);
+    document.getElementById('vote-share-val').textContent = v.toFixed(1);
+    const ct = document.getElementById('country-thresholds');
+    ct.innerHTML = '';
+    thresholdCountries.forEach(c => {
+      const passes = v >= c.voteThreshold && c.voteThreshold > 0;
+      const noThreshold = c.voteThreshold === 0;
+      const div = document.createElement('div');
+      div.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);font-size:13px;';
+      const status = noThreshold ? '—' : passes ? '✓ qualifies' : '✗ excluded';
+      const statusColor = noThreshold ? 'var(--color-text-secondary)' : passes ? 'var(--color-text-success)' : 'var(--color-text-danger)';
+      div.innerHTML = '<span style="font-weight:500;min-width:100px;">' + c.name + '</span><span style="flex:1;color:var(--color-text-secondary);font-size:12px;">' + c.note + '</span><span style="font-weight:500;color:' + statusColor + ';min-width:90px;text-align:right;">' + status + '</span>';
+      if (!noThreshold && !passes) div.style.background = 'var(--color-background-secondary)';
+      ct.appendChild(div);
+    });
+  }
+  updateThreshold(4);
+</script>
+</body>
+</html>
