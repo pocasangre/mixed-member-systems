@@ -213,7 +213,7 @@
 
         <div style="margin-bottom:12px;">
           <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
-            <span class="label">Party vote share — entitles party to <span id="entitled-seats-inline" style="font-weight:500;color:var(--color-text-primary);">60</span> of 120 seats</span>
+            <span class="label">Party vote share — entitles party to <span id="entitled-seats-inline" style="font-weight:500;color:var(--color-text-primary);">60</span> of 100 seats</span>
             <span style="font-size:13px;font-weight:500;color:var(--color-text-primary);" id="vote-share-display">50%</span>
           </div>
           <input type="range" min="5" max="70" step="1" value="50" id="vote-slider" oninput="updateLinkage()" style="width:100%;">
@@ -225,20 +225,20 @@
             <button class="stepper-btn" onclick="changeDistrict(-1)">&#8722;</button>
             <span style="font-size:20px;font-weight:500;color:var(--color-text-primary);min-width:32px;text-align:center;" id="district-val">30</span>
             <button class="stepper-btn" onclick="changeDistrict(1)">&#43;</button>
-            <span class="muted" style="font-size:12px;">of 60 district seats total</span>
+            <span class="muted" style="font-size:12px;">of 50 district seats total</span>
           </div>
         </div>
 
         <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px;">
           <div class="metric-card"><div class="metric-val" id="m-district">30</div><div class="metric-lbl">District seats</div></div>
           <div class="metric-card"><div class="metric-val" id="m-list">30</div><div class="metric-lbl">List seats</div></div>
-          <div class="metric-card"><div class="metric-val" id="m-total">60</div><div class="metric-lbl">Party total</div></div>
-          <div class="metric-card"><div class="metric-val" id="m-legislature">120</div><div class="metric-lbl">Legislature size</div></div>
+          <div class="metric-card"><div class="metric-val" id="m-total">50</div><div class="metric-lbl">Party total</div></div>
+          <div class="metric-card"><div class="metric-val" id="m-legislature">100</div><div class="metric-lbl">Legislature size</div></div>
         </div>
 
         <div style="margin-bottom:10px;">
           <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-            <span class="label">Legislature — <span id="legislature-size-label" style="font-weight:500;color:var(--color-text-primary);">120</span> seats total</span>
+            <span class="label">Legislature — <span id="legislature-size-label" style="font-weight:500;color:var(--color-text-primary);">100</span> seats total</span>
             <span class="label" id="share-label">Party A: 50%</span>
           </div>
           <div class="seat-grid" id="seat-grid"></div>
